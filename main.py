@@ -18,8 +18,8 @@ FPS = 120
 drag = 0.000001
 coll_loss = 0.000001
 
-res_x = 1920
-res_y = 1080
+res_x = 2560
+res_y = 1440
 
 zoom_factor = 0.98
 
@@ -28,7 +28,19 @@ white = pygame.Color(255, 255, 255)
 black = pygame.Color(0, 0, 0)
 gray = pygame.Color(128, 128, 128)
 
-# Initiate Pygame
+bodies = []
+traces = []
+#trails = [] TO-DO
+
+# Switches
+trace = False
+edges = True
+gravity = True
+collision_color = False
+
+usr_id = 999999999
+
+# Initiate Game
 screen = pygame.display.set_mode((res_x, res_y), pygame.DOUBLEBUF|pygame.OPENGL|pygame.NOFRAME)
 screen_rect = screen.get_rect()
 screen.set_alpha(None)
@@ -39,27 +51,14 @@ display.set_colorkey(black)
 
 pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP])
 
-bodies = []
-traces = []
-#trails = [] TO-DO
-
-# Switches
-trace = False
-edges = False
-gravity = True
-collision_color = False
-
-usr_id = 999999999
-
-# Initiate Game
 pygame.init()
 screen = pygame.display.set_mode((res_x, res_y))
 pygame.display.set_caption('Space')
 fpsClock = pygame.time.Clock()
+id_iter = itertools.count()
 
 
 class Body:
-    id_iter = itertools.count()
 
     def __init__(self, c=gray, r=25, p=(0, 0), v=(0, 0)):
         """
@@ -72,7 +71,7 @@ class Body:
         m -- mass
         """
 
-        self.id = next(self.id_iter)
+        self.id = next(id_iter)
 
         self.c = c
         self.r = r
@@ -91,12 +90,13 @@ class Body:
         if self.v[0] != 0 and self.v[1] != 0 and self.fr >= 1.5 and trace:
             traces.append(Trace(self.p, numpy.subtract(self.c, (35, 35, 35, 0)), self.fr, self.v))
 
-    def zoom(self, direction):
-        self.r = self.r / direction
+    def zoom(self, zoom_factor):
+        self.r = self.r / zoom_factor
         self.fr = self.r * zoom
-        self.v = numpy.divide(self.v, direction)
+        self.v = numpy.divide(self.v, zoom_factor)
         self.m = 2 * (10 ** 9) * numpy.pi * (self.r ** 2)
 
+        # Deletes traces when zooming
         return []
 
     def gravity(self):
@@ -134,6 +134,7 @@ class Body:
 
         self.p = numpy.add(self.p, numpy.subtract(self.v, numpy.multiply(self.v, drag)))
 
+    # Teleports body to the other side of the screen if it hits the edge.
     def edge(self):
         p = cptosp(self.p)
 
@@ -175,6 +176,8 @@ class Body:
             self.c = pygame.Color(random.randint(40, 255), random.randint(40, 255), random.randint(40, 255))
             self.c = pygame.Color(random.randint(40, 255), random.randint(40, 255), random.randint(40, 255))
 
+    # Some bodies do this weird merge when they get too close to each other.
+    # This function fixes that even if it is very resource intensive
     def overlap(self):
         for body in bodies:
 
@@ -244,13 +247,14 @@ def reset():
     bodies = []
     traces = []
 
-    bodies.append(Body(p=(100, - 100), v=(3, 2), r=25, c=white))
-    bodies.append(Body(p=(0, 0), r=50))
+    bodies.append(Body(p=(0, 300), v=(3, 0), r=5, c=white))
+    bodies.append(Body(p=(0 + 150, 200), v=(3, 0), r=5, c=white))
+    bodies.append(Body(p=(0, 0), r=75))
 
-    return bodies, traces
+    return bodies, traces, itertools.count(0)
 
 
-bodies, traces = reset()
+bodies, traces, id_iter = reset()
 
 # Flags and temps
 firstpos = 0
@@ -301,17 +305,17 @@ while True:
         # Reset
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_e:
-                bodies, traces = reset()
+                focused_body = None
+                bodies, traces, id_iter = reset()
 
         # Focus mode
         if s_pressed:
             if event.type == pygame.KEYUP:
                 # Switch between bodies
                 if event.key == pygame.K_d:
-
                     if focused_body == None:
                         focused_body = bodies[0]
-                    if focused_body.id != len(bodies)-1:
+                    elif focused_body.id != len(bodies)-1:
                         focused_body = bodies[focused_body.id+1]
                     else:
                         focused_body = bodies[0]
@@ -319,7 +323,7 @@ while True:
                 elif event.key == pygame.K_a:
                     if focused_body == None:
                         focused_body = bodies[-1]
-                    if focused_body.id != 0:
+                    elif focused_body.id != 0:
                         focused_body = bodies[focused_body.id-1]
                     else:
                         focused_body = bodies[-1]
