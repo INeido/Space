@@ -76,6 +76,6 @@ for x in range(count):
                        c=white))
 ```
 
-You can past these into the **reset** function.
+You can paste these into the **reset** function.
 
 ![](https://github.com/INeido/Space/blob/main/img/gif2.gif)
