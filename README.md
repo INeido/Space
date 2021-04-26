@@ -36,7 +36,7 @@ Doesn't do much. Just some bodies flying around in the void.
 | Right Click | Gravitational push at cursor (Insert) |
 | Middle Click | Drag screen (Insert) |
 
-![alt text](https://github.com/INeido/Space/blob/main/img/screen_1.png)
+![](https://github.com/INeido/Space/blob/main/img/gif1.gif)
 
 ## Examples
 
@@ -78,5 +78,4 @@ for x in range(count):
 
 You can past these into the **reset** function.
 
-![alt text](https://github.com/INeido/Space/blob/main/img/screen_2.png)
-![alt text](https://github.com/INeido/Space/blob/main/img/screen_3.png)
+![](https://github.com/INeido/Space/blob/main/img/gif2.gif)
