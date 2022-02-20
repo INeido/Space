@@ -27,6 +27,7 @@ zoom_factor = 0.98
 white = pygame.Color(255, 255, 255)
 black = pygame.Color(0, 0, 0)
 gray = pygame.Color(128, 128, 128)
+green = pygame.Color(0, 128, 0)
 
 bodies = []
 traces = []
