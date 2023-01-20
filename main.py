@@ -102,12 +102,10 @@ class Body:
 
     def gravity(self):
         for body in bodies:
-
             if self == body:
                 continue
 
             disx, disy = numpy.subtract(body.p, self.p)
-
             d = numpy.sqrt((disx ** 2) + (disy ** 2))
 
             sumr = self.r + body.r
@@ -125,19 +123,11 @@ class Body:
 
             if gravity:
                 f = G * body.m * self.m / (d ** 2)
-                self.v = (numpy.cos(angle) * f) / self.m + self.v[0], (numpy.sin(angle) * f) / self.m + self.v[1]
+                self.v += f * numpy.array([numpy.cos(angle), numpy.sin(angle)]) / self.m
 
         limit = 60
-        if self.v[0] >= limit:
-            self.v = limit, self.v[1]
-        if self.v[0] <= -limit:
-            self.v = -limit, self.v[1]
-        if self.v[1] >= limit:
-            self.v = self.v[0], limit
-        if self.v[1] <= -limit:
-            self.v = self.v[0], -limit
-
-        self.p = numpy.add(self.p, numpy.subtract(self.v, numpy.multiply(self.v, drag)))
+        self.v = numpy.clip(self.v, -limit, limit)
+        self.p += self.v * (1 - drag)
 
     # Teleports body to the other side of the screen if it hits the edge.
     def edge(self):
