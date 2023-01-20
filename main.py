@@ -132,16 +132,7 @@ class Body:
     # Teleports body to the other side of the screen if it hits the edge.
     def edge(self):
         p = cptosp(self.p)
-
-        if p[0] <= 0:
-            self.p = sptocp((res_x, res_y - p[1]))
-        elif p[0] >= res_x:
-            self.p = sptocp((0, res_y - p[1]))
-
-        if p[1] <= 0:
-            self.p = sptocp((res_x - p[0], res_y))
-        elif p[1] >= res_y:
-            self.p = sptocp((res_x - p[0], 0))
+        self.p = sptocp(numpy.mod(p, [res_x, res_y]))
 
     def collision(self, body, angle):
         velocities = numpy.array([self.v, body.v])
