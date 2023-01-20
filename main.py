@@ -31,7 +31,7 @@ green = pygame.Color(0, 128, 0)
 
 bodies = []
 traces = []
-#trails = [] TO-DO
+# trails = [] TO-DO
 
 # Switches
 trace = False
@@ -42,7 +42,7 @@ collision_color = False
 usr_id = 999999999
 
 # Initiate Game
-screen = pygame.display.set_mode((res_x, res_y), pygame.DOUBLEBUF|pygame.OPENGL|pygame.NOFRAME)
+screen = pygame.display.set_mode((res_x, res_y), pygame.DOUBLEBUF | pygame.OPENGL | pygame.NOFRAME)
 screen_rect = screen.get_rect()
 screen.set_alpha(None)
 
@@ -117,6 +117,10 @@ class Body:
             # Collision detection
             if d <= sumr and self.id != usr_id and body.id != usr_id:
                 self.collision(body, angle)
+
+                if collision_color:
+                    self.c = numpy.random.randint(40, 255, 3)
+                    body.c = numpy.random.randint(40, 255, 3)
                 break
 
             if gravity:
@@ -150,32 +154,12 @@ class Body:
             self.p = sptocp((res_x - p[0], 0))
 
     def collision(self, body, angle):
-        vel0 = numpy.sqrt((self.v[1] ** 2) + (self.v[0] ** 2))
-        vel1 = numpy.sqrt((body.v[1] ** 2) + (body.v[0] ** 2))
-
-        movangle0 = numpy.arctan2(self.v[1], self.v[0])
-        movangle1 = numpy.arctan2(body.v[1], body.v[0])
-
-        newvelx0 = ((vel0 * numpy.cos(movangle0 - angle) * (self.m - body.m) + (
-                2 * body.m * vel1 * numpy.cos(movangle1 - angle))) / (self.m + body.m)) * numpy.cos(angle) + (
-                               vel0 * numpy.sin(movangle0 - angle) * numpy.cos(angle + (numpy.pi / 2)))
-        newvely0 = ((vel0 * numpy.cos(movangle0 - angle) * (self.m - body.m) + (
-                2 * body.m * vel1 * numpy.cos(movangle1 - angle))) / (self.m + body.m)) * numpy.sin(angle) + (
-                               vel0 * numpy.sin(movangle0 - angle) * numpy.sin(angle + (numpy.pi / 2)))
-
-        newvelx1 = ((vel1 * numpy.cos(movangle1 - angle) * (body.m - self.m) + (
-                    2 * self.m * vel0 * numpy.cos(movangle0 - angle))) / (body.m + self.m)) * numpy.cos(angle) + (
-                               vel1 * numpy.sin(movangle1 - angle) * numpy.cos(angle + (numpy.pi / 2)))
-        newvely1 = ((vel1 * numpy.cos(movangle1 - angle) * (body.m - self.m) + (
-                    2 * self.m * vel0 * numpy.cos(movangle0 - angle))) / (body.m + self.m)) * numpy.sin(angle) + (
-                               vel1 * numpy.sin(movangle1 - angle) * numpy.sin(angle + (numpy.pi / 2)))
-
-        self.v = (newvelx0 - (newvelx0 * coll_loss), newvely0 - (newvely0 * coll_loss))
-        body.v = (newvelx1 - (newvelx1 * coll_loss), newvely1 - (newvely1 * coll_loss))
-
-        if collision_color:
-            self.c = pygame.Color(random.randint(40, 255), random.randint(40, 255), random.randint(40, 255))
-            self.c = pygame.Color(random.randint(40, 255), random.randint(40, 255), random.randint(40, 255))
+        velocities = numpy.array([self.v, body.v])
+        collision_matrix = numpy.array([[(self.m - body.m) / (self.m + body.m), 2 * body.m / (self.m + body.m)],
+                                        [2 * self.m / (self.m + body.m), (body.m - self.m) / (self.m + body.m)]])
+        new_velocities = numpy.dot(collision_matrix, velocities)
+        self.v = new_velocities[0] - (new_velocities[0] * coll_loss)
+        body.v = new_velocities[1] - (new_velocities[1] * coll_loss)
 
     # Some bodies do this weird merge when they get too close to each other.
     # This function fixes that even if it is very resource intensive
@@ -232,17 +216,20 @@ class Trace:
     def draw(self):
         pygame.draw.circle(display, self.c, cptosp(self.p), self.fr)
 
+
 def sptocp(p):
     cartesianx = (p[0] - offset_x - res_x / 2) / zoom
     cartesiany = (p[1] - offset_y - res_y / 2) / -zoom
 
     return cartesianx, cartesiany
 
+
 def cptosp(p):
     screenx = res_x / 2 + zoom * p[0] + offset_x
     screeny = res_y / 2 - zoom * p[1] + offset_y
 
     return screenx, screeny
+
 
 def reset():
     bodies = []
